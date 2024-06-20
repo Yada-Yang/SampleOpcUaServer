@@ -40,7 +40,7 @@ namespace SampleOpcUaServer
             Console.ReadLine();
 
             // 添加新变量
-            nodeManager?.AddVariable("ns=2;s=Root", "Test2", (int)BuiltInType.Int16, ValueRanks.Scalar);
+            nodeManager?.AddVariable("ns=2;s=Root", null, "Test2", (int)BuiltInType.Int16, ValueRanks.Scalar);
             Console.WriteLine("已添加变量");
             Console.ReadLine();
         }

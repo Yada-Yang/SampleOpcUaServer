@@ -17,19 +17,20 @@ namespace SampleOpcUaServer
 
         protected override NodeStateCollection LoadPredefinedNodes(ISystemContext context)
         {
-            FolderState root = CreateFolder(null, "Root");
+            FolderState root = CreateFolder(null, null, "Root");
             root.AddReference(ReferenceTypes.Organizes, true, ObjectIds.ObjectsFolder); // 将节点添加到服务器根节点
             root.EventNotifier = EventNotifiers.SubscribeToEvents;
             AddRootNotifier(root);
 
-            CreateVariable(root, "Test", BuiltInType.Int64, ValueRanks.Scalar);
+            CreateVariable(root, null, "Test", BuiltInType.Int64, ValueRanks.Scalar);
 
             return new NodeStateCollection(new List<NodeState> { root });
         }
 
-        protected virtual FolderState CreateFolder(NodeState? parent, string name)
+        protected virtual FolderState CreateFolder(NodeState? parent, string? path, string name)
         {
-            string path = parent?.NodeId.Identifier is string id ? id + "_" + name : name;
+            if (string.IsNullOrWhiteSpace(path))
+                path = parent?.NodeId.Identifier is string id ? id + "_" + name : name;
 
             FolderState folder = new FolderState(parent);
             folder.SymbolicName = name;
@@ -50,14 +51,15 @@ namespace SampleOpcUaServer
             return folder;
         }
 
-        protected virtual BaseDataVariableState CreateVariable(NodeState? parent, string name, BuiltInType dataType, int valueRank)
+        protected virtual BaseDataVariableState CreateVariable(NodeState? parent, string? path, string name, BuiltInType dataType, int valueRank)
         {
-            return CreateVariable(parent, name, (uint)dataType, valueRank);
+            return CreateVariable(parent, path, name, (uint)dataType, valueRank);
         }
 
-        protected virtual BaseDataVariableState CreateVariable(NodeState? parent, string name, NodeId dataType, int valueRank)
+        protected virtual BaseDataVariableState CreateVariable(NodeState? parent, string? path, string name, NodeId dataType, int valueRank)
         {
-            string path = parent?.NodeId.Identifier is string id ? id + "_" + name : name;
+            if (string.IsNullOrWhiteSpace(path))
+                path = parent?.NodeId.Identifier is string id ? id + "_" + name : name;
 
             BaseDataVariableState variable = new BaseDataVariableState(parent);
             variable.SymbolicName = name;
@@ -105,29 +107,25 @@ namespace SampleOpcUaServer
             }
         }
 
-        public void AddFolder(NodeId parentId, string name)
+        public NodeId AddFolder(NodeId parentId, string? path, string name)
         {
             var node = Find(parentId);
-            if (node != null)
-            {
-                CreateFolder(node, name);
-                AddPredefinedNode(SystemContext, node);
-            }
+            var newNode = CreateFolder(node, path, name);
+            AddPredefinedNode(SystemContext, node);
+            return newNode.NodeId;
         }
 
-        public void AddVariable(NodeId parentId, string name, BuiltInType dataType, int valueRank)
+        public NodeId AddVariable(NodeId parentId, string? path, string name, BuiltInType dataType, int valueRank)
         {
-            AddVariable(parentId, name, (uint)dataType, valueRank);
+            return AddVariable(parentId, path, name, (uint)dataType, valueRank);
         }
 
-        public void AddVariable(NodeId parentId, string name, NodeId dataType, int valueRank)
+        public NodeId AddVariable(NodeId parentId, string? path, string name, NodeId dataType, int valueRank)
         {
             var node = Find(parentId);
-            if (node != null)
-            {
-                CreateVariable(node, name, dataType, valueRank);
-                AddPredefinedNode(SystemContext, node);
-            }
+            var newNode = CreateVariable(node, path, name, dataType, valueRank);
+            AddPredefinedNode(SystemContext, node);
+            return newNode.NodeId;
         }
     }
 }
